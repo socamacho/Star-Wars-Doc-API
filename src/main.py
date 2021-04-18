@@ -52,17 +52,34 @@ def get_all_persons():
     return jsonify(response_persons),200
 
 
+@app.route('/planets/<int:id>', methods=['GET'])
+def get_planet_id(id):
+    get_planet_info = Planet.query.get(id) 
+    if get_planet_info is None:
+        raise APIException ("Planet not found", status_code=404)
+    response_planet_id = get_planet_info.serialize() #Pq tiene la instancia de planet, por eso puedo acceder a los metodos del modelo Planet.
+    return jsonify(response_planet_id),200
+
+@app.route('/persons/<int:id>', methods=['GET'])
+def get_person_id(id):
+    get_person_info = Person.query.get(id)
+    if get_person_info is None:
+        raise APIException ("Character not found", status_code=404)
+    response_person_id = get_person_info.serialize()
+    return jsonify(response_person_id),200
 
 
 
-@app.route('/user', methods=['GET'])
+
+
+"""@app.route('/user', methods=['GET'])
 def handle_hello():
 
     response_body = {
         "msg": "Hello, this is your GET /user response "
     }
 
-    return jsonify(response_body), 200
+    return jsonify(response_body), 200"""
 
 # this only runs if `$ python src/main.py` is executed
 if __name__ == '__main__':
