@@ -8,7 +8,8 @@ from flask_swagger import swagger
 from flask_cors import CORS
 from utils import APIException, generate_sitemap
 from admin import setup_admin
-from models import db, User, Planet, Person
+from models import db, User, Planet, Person, Favorites_People, Favorites_Planet
+from sqlalchemy.orm import relationship
 #from models import Person
 
 app = Flask(__name__)
@@ -30,8 +31,10 @@ def handle_invalid_usage(error):
 @app.route('/')
 def sitemap():
     return generate_sitemap(app)
-#----------ENDPOINTS------------------------------------------>
+#----------ENDPOINTS STAR WARS------------------------------------------>
 
+
+#-----------GET PLANETS and PEOPLE-------------------------------------->
 
 @app.route('/planets', methods=['GET'])
 def get_all_planets():
@@ -69,17 +72,17 @@ def get_person_id(id):
     return jsonify(response_person_id),200
 
 
+#---------------------------GET, POST and DELETE users by ID------------------------->
 
 
-
-"""@app.route('/user', methods=['GET'])
+@app.route('/user', methods=['GET'])
 def handle_hello():
 
     response_body = {
         "msg": "Hello, this is your GET /user response "
     }
 
-    return jsonify(response_body), 200"""
+    return jsonify(response_body), 200
 
 # this only runs if `$ python src/main.py` is executed
 if __name__ == '__main__':

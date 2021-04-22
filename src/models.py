@@ -5,9 +5,11 @@ db = SQLAlchemy()
 class User(db.Model):
     id = db.Column(db.Integer, primary_key=True)
     email = db.Column(db.String(120), unique=True, nullable=False)
-    password = db.Column(db.String(80), unique=False, nullable=False)
-    is_active = db.Column(db.Boolean(), unique=False, nullable=False)
-
+    password = db.Column(db.String(80), unique=False, nullable=False) #Por que psw=False?
+    children_favorites_people = relationship('favorites_people')
+    children_favorites_planet = relationship('favorites_planet')
+    #is_active = db.Column(db.Boolean(), unique=False, nullable=False)
+    
     def __repr__(self):
         return '<User %r>' % self.username
 
@@ -32,6 +34,7 @@ class Planet(db.Model): #Las clases deben ir con ENTIDADES.
     orbital_period = db.Column(db.Integer)
     rotation_period = db.Column(db.Integer)
     url = db.Column(db.String(100))
+    children_favorites = relationship('favorites_planet')
 
     def __repr__(self):
         return '<Planet %r>' % self.name
@@ -68,6 +71,7 @@ class Person(db.Model):
     height = db.Column(db.Integer)
     skin_color = db.Column(db.String(20))
     url = db.Column(db.String(100))
+    children_favorites = relationship("favorites_people")
 
     def __repr__(self):
         return '<Person %r>' % self.name
@@ -90,3 +94,35 @@ class Person(db.Model):
 
             # do not serialize the password, its a security breach
         }
+
+class Favorites_People(db.Model):
+    id = db.Column(db.Integer, primary_key=True)
+    id_people = db.Column(db.Integer, ForeignKey('people.id'))
+    id_user = db.Column(db.Integer, ForeignKey('user.id'))
+
+    def __repr__(self):
+        return '<Favorites_People %r>' % self.name
+
+
+    def serialize(self):
+        return {
+            "id": self.id #DUDA:Que otra informacion podria retornarse?
+        }   
+
+class Favorites_Planet(db.Model):
+    id = db.Column(db.Integer, primary_key=True)
+    id_user = db.Column(db.Integer, ForeignKey('user.id'))
+    id_planet = db.Column(db.Integer,ForeingKey('planet.id'))
+
+    def __repr__(self):
+        return '<Favorites_Planet %r>' % self.name
+
+    
+    def serialize(self):
+        return {
+            "id": self.id #DUDA: Misma duda que linea 109.
+
+        }
+
+
+
