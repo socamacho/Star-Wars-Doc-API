@@ -8,7 +8,7 @@ from flask_swagger import swagger
 from flask_cors import CORS
 from utils import APIException, generate_sitemap
 from admin import setup_admin
-from models import db, User, Planet, Person, Favorites_People, Favorites_Planet
+from models import db, User, Planet, Person, Favorites_person, Favorites_planet
 from sqlalchemy.orm import relationship
 #from models import Person
 
