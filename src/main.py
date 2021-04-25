@@ -75,14 +75,47 @@ def get_person_id(id):
 #---------------------------GET, POST and DELETE users by ID------------------------->
 
 
-@app.route('/user', methods=['GET'])
-def handle_hello():
+@app.route('/users', methods=['GET'])
+def get_all_users():
 
-    response_body = {
-        "msg": "Hello, this is your GET /user response "
-    }
+    users_array = User.query.all()
+    response_users = list(map(lambda user: user.serialize(), users_array))
 
-    return jsonify(response_body), 200
+    return jsonify(response_users),200
+
+@app.route('/users/<int:user_id>/favorites', methods=['GET'])
+def get_favorites_by_IDuser(user_id):#NOTA: El parametro debe llamarse EXACTAMENTE igual que la ruta.
+    favorites_person = Favorites_person.query.filter_by(id_user=user_id)
+    favorites_planet = Favorites_planet.query.filter_by(id_user=user_id)
+    
+    response_favorites_person = list(map(lambda fav_person: fav_person.serialize(), favorites_person)) #NOTA: Al ser dos arrays de diccionarios los puedo sumar.
+    response_favorites_planet = list(map(lambda fav_planet: fav_planet.serialize(), favorites_planet)) #NOTA: El operador "+" en arrays los suma, unicamente si son arrays del mismo tipo.
+    response_favorites_total = response_favorites_person + response_favorites_planet
+
+    return jsonify(response_favorites_total),200
+
+@app.route('/users/<int:user_id>/favorites', methods=['POST'])
+def create_favorites_by_IDuser():
+    clase = request.json.get("clase", None)
+    id_clase = request.json.get("id_clase", None)
+    id_user = request.json.get("id_user", None)
+
+
+    if clase == "person" :
+        storage_fav_person = Favorites_person(id_person=id_clase, id_user=id_user)
+        db.session.add(storage_fav_person) #NOTA: Codigo linea 106 y 107 son para insertar neuvos datos a la base de datos.
+        db.session.commit()
+
+        return  jsonify(storage_fav_person.serialize()),200
+
+    elif clase == "planet":
+        storage_fav_planet = Favorites_planet(id_planet=id_clase,id_user=id_user)
+        db.session.add(storage_fav_planet) 
+        db.session.commit()
+
+        return jsonify(storage_fav_planet.serialize()),200
+    return "Bad request:Class does not exist",400
+
 
 # this only runs if `$ python src/main.py` is executed
 if __name__ == '__main__':
