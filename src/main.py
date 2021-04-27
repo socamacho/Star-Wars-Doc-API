@@ -57,7 +57,7 @@ def get_all_persons():
 
 @app.route('/planets/<int:id>', methods=['GET'])
 def get_planet_id(id):
-    get_planet_info = Planet.query.get(id) 
+    get_planet_info = Planet.query.get(id) #REPASAR SQL. Planet.query.get(id) lo que hace es que me trae la info del planeta por id.
     if get_planet_info is None:
         raise APIException ("Planet not found", status_code=404)
     response_planet_id = get_planet_info.serialize() #Pq tiene la instancia de planet, por eso puedo acceder a los metodos del modelo Planet.
@@ -72,7 +72,7 @@ def get_person_id(id):
     return jsonify(response_person_id),200
 
 
-#---------------------------GET, POST and DELETE users by ID------------------------->
+#---------------------------GET users by ID------------------------->
 
 
 @app.route('/users', methods=['GET'])
@@ -84,37 +84,66 @@ def get_all_users():
     return jsonify(response_users),200
 
 @app.route('/users/<int:user_id>/favorites', methods=['GET'])
-def get_favorites_by_IDuser(user_id):#NOTA: El parametro debe llamarse EXACTAMENTE igual que la ruta.
-    favorites_person = Favorites_person.query.filter_by(id_user=user_id)
-    favorites_planet = Favorites_planet.query.filter_by(id_user=user_id)
+def get_favorites_by_IDuser(user_id):
+    print(request.method)#NOTA: El parametro debe llamarse EXACTAMENTE igual que la ruta.
+    favorites_person_array = Favorites_person.query.filter_by(id_user=user_id) #DUDA id_user=user_id, origen de los datos? R/id_user de la linea 96 en models.py igualado al parametro de la ruta actual (user_id).
+    favorites_planet_array = Favorites_planet.query.filter_by(id_user=user_id) #NOTA: Favorites_person.query.filter_by/planet devuelven array.
     
-    response_favorites_person = list(map(lambda fav_person: fav_person.serialize(), favorites_person)) #NOTA: Al ser dos arrays de diccionarios los puedo sumar.
-    response_favorites_planet = list(map(lambda fav_planet: fav_planet.serialize(), favorites_planet)) #NOTA: El operador "+" en arrays los suma, unicamente si son arrays del mismo tipo.
-    response_favorites_total = response_favorites_person + response_favorites_planet
+    response_favorites_person = list(map(lambda fav_person: fav_person.serialize(), favorites_person_array)) #NOTA: Al ser dos arrays de diccionarios los puedo sumar.
+    response_favorites_planet = list(map(lambda fav_planet: fav_planet.serialize(), favorites_planet_array)) #NOTA: El operador "+" en arrays los suma, unicamente si son arrays del mismo tipo.
+    response_favorites_total = response_favorites_person + response_favorites_planet #NOTA: Se esta concatenando la info que ya tenia con la nueva.
 
     return jsonify(response_favorites_total),200
 
+#------------------------POST FAVORITES by USER ID----------------------->
+
+
 @app.route('/users/<int:user_id>/favorites', methods=['POST'])
-def create_favorites_by_IDuser():
-    clase = request.json.get("clase", None)
-    id_clase = request.json.get("id_clase", None)
-    id_user = request.json.get("id_user", None)
+def create_favorites_by_IDuser(user_id):
+    print(request.method)
+    modelo_favorites = request.json.get("modelo_favorites", None)#Traigo el valor de la propiedad modelo_favorites que esta en el body del request.
+    id_modelo = request.json.get("id_modelo", None)#Extrae la info del id_modelo ya sea planet o character.
+    #id_user = request.json.get("id_user", None)#El ID user asignado al planet o person.
 
 
-    if clase == "person" :
-        storage_fav_person = Favorites_person(id_person=id_clase, id_user=id_user)
-        db.session.add(storage_fav_person) #NOTA: Codigo linea 106 y 107 son para insertar neuvos datos a la base de datos.
-        db.session.commit()
+    if modelo_favorites == "person" : #DUDA: Logica del codigo...si la info de clase es igual a la de person, almacenelo y creelo?
+        storage_fav_person = Favorites_person(id_person=id_modelo, id_user=user_id)# IZQ.Nombre de la propiedad y a la DERECHA, la variable. En favorites_person estoy creando una instancia (objeto) con las propiedades id_person y id_user.
+        db.session.add(storage_fav_person) #NOTA: Codigo linea 106 y 107 son para insertar nuevos datos a la base de datos.
+        db.session.commit()#db.session es una imagen viviente de lo que hay en la base de datos. Commit hace que los datos esten enel disco duro.
 
-        return  jsonify(storage_fav_person.serialize()),200
+        return  jsonify(storage_fav_person.serialize()),200 #DUDA: Devuelvo la info almacenada? Si. 
 
-    elif clase == "planet":
-        storage_fav_planet = Favorites_planet(id_planet=id_clase,id_user=id_user)
+    elif modelo_favorites == "planet":
+        storage_fav_planet = Favorites_planet(id_planet=id_modelo,id_user=user_id)
         db.session.add(storage_fav_planet) 
         db.session.commit()
 
         return jsonify(storage_fav_planet.serialize()),200
-    return "Bad request:Class does not exist",400
+    return "Bad request:Modelo favorites does not exist",400
+
+#--------------------DELETE FAVORITES by USER ID--------------------->
+
+@app.route('/favorite/<string:modelo>/<int:favorite_id>', methods=['DELETE']) #DUDAS: el get no es como el delete? debo condicionarlo de alguna manera?
+def delete_favorites_by_ID(modelo,favorite_id):
+    print(modelo)
+    if modelo == "person":
+        info_person_favorite_id = Favorites_person.query.get(favorite_id)#Get me trae un objeto (instancia de favorites_person)
+        if info_person_favorite_id is None:
+            return "Not found: Person does not exist",404
+        else:
+            db.session.delete(info_person_favorite_id)
+            db.session.commit()
+        return "Person was successfully deleted",204
+    elif modelo == "planet":
+        info_planet_favorite_id = Favorites_planet.query.get(favorite_id)
+        if info_planet_favorite_id is None:
+            return "Not found: Planet does not exist",404
+        else: 
+            db.session.delete(info_planet_favorite_id)
+            db.session.commit() 
+        return "Planet was successfully deleted",204
+    return "Bad request: We cannot handle this model",400 #NOTA: Si no existe el planet o character, sale este mensaje.
+
 
 
 # this only runs if `$ python src/main.py` is executed

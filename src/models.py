@@ -93,7 +93,7 @@ class Person(db.Model):
 class Favorites_person(db.Model):
     id = db.Column(db.Integer, primary_key=True)
     id_person = db.Column(db.Integer,db.ForeignKey('person.id'))
-    id_user = db.Column(db.Integer, db.ForeignKey('user.id'))
+    id_user = db.Column(db.Integer, db.ForeignKey('user.id')) 
     person = db.relationship("Person", backref=db.backref("Favorites_person", cascade="all,delete")) 
 
     def __repr__(self):
